@@ -136,20 +136,29 @@ vermagic:       6.8.0 SMP preempt modversions 686
 mount: mounting /dev/sdc on /mnt/sda2/ failed: Invalid argument
 ```
 
+## Steps
+Based on "boot/grub2/readme.txt"
+1. Create a disk image
+```
 cd /tmp
 dd if=/dev/zero of=disk.img bs=1M count=128
-cgdisk disk.img
-
+```
+2. Partition it with GPT partitions usinig `cgdisk disk.img` or
+```
 parted --script disk.img mklabel gpt mkpart primary 1MiB 127MiB
-
-loop_dev=$(sudo losetup -f)
-losetup "$loop_dev" disk.img
-partx -a "$loop_dev"
+```
+3. Setup loop device and loop partitions
+```
+loop_dev=$(sudo losetup -f --show disk.img)
+sudo partx -a "$loop_dev"
+```
+5. Prepare the root partition
+```
 mkfs.f2fs -f -l mylable123 -i -O extra_attr,inode_checksum,sb_checksum,compression -e raw -E bin "$loop_dev"
-
+```
+Another example `sudo mkfs.ext3 -L root "$loop_dev"p1`
 6. Cleanup loop device
+```
 partx -d "$loop_dev"
 losetup -d "$loop_dev"
-
-
-sudo mkfs.ext3 -L root "$loop_dev"p1
+```
