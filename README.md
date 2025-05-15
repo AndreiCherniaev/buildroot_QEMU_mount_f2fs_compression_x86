@@ -135,3 +135,21 @@ vermagic:       6.8.0 SMP preempt modversions 686
 [  582.686661] fuseblk: Unknown parameter 'compress_algorithm'
 mount: mounting /dev/sdc on /mnt/sda2/ failed: Invalid argument
 ```
+
+cd /tmp
+dd if=/dev/zero of=disk.img bs=1M count=128
+cgdisk disk.img
+
+parted --script disk.img mklabel gpt mkpart primary 1MiB 127MiB
+
+loop_dev=$(sudo losetup -f)
+losetup "$loop_dev" disk.img
+partx -a "$loop_dev"
+mkfs.f2fs -f -l mylable123 -i -O extra_attr,inode_checksum,sb_checksum,compression -e raw -E bin "$loop_dev"
+
+6. Cleanup loop device
+partx -d "$loop_dev"
+losetup -d "$loop_dev"
+
+
+sudo mkfs.ext3 -L root "$loop_dev"p1
