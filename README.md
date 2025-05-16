@@ -162,3 +162,13 @@ Another example `sudo mkfs.ext3 -L root "$loop_dev"p1`
 partx -d "$loop_dev"
 losetup -d "$loop_dev"
 ```
+
+## Build mkfs.f2fs from source code
+```
+sudo apt install git uuid-dev libselinux1-dev libtool dh-autoreconf
+git clone https://git.kernel.org/pub/scm/linux/kernel/git/jaegeuk/f2fs-tools.git && cd "f2fs-tools"
+./autogen.sh
+./configure
+make -j$(( $(nproc) + 1))
+libtool --mode=execute gdb -ex=r '/home/a/mycode/f2fs-tools/mkfs/mkfs.f2fs'
+```
