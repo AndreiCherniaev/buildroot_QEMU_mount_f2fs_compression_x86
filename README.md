@@ -7,7 +7,7 @@ mount -o compress_algorithm=zstd:1,compress_chksum,atgc,gc_merge,lazytime /dev/s
 ## Ubuntu and f2fs
 In Ubuntu 24.04.1 works good. First step I can make f2fs partition
 ```
-root@Linux:/home/a# mkfs.f2fs -f -l mylable123 -i -O extra_attr,inode_checksum,sb_checksum,compression -e raw -E bin /dev/sdb
+# mkfs.f2fs -f -l mylable123 -i -O extra_attr,inode_checksum,sb_checksum,compression -e raw -E bin /dev/sdb
 
     F2FS-tools: mkfs.f2fs Ver: 1.16.0 (2023-04-11)
 
@@ -154,7 +154,7 @@ sudo partx -a "$loop_dev"
 ```
 5. Prepare the root partition
 ```
-mkfs.f2fs -f -l mylable123 -i -O extra_attr,inode_checksum,sb_checksum,compression -e raw -E bin "$loop_dev"
+sudo mkfs.f2fs -f -l mylable123 -i -O extra_attr,inode_checksum,sb_checksum,compression -e raw -E bin "$loop_dev"
 ```
 Another example `sudo mkfs.ext3 -L root "$loop_dev"p1`
 6. Cleanup loop device
@@ -164,11 +164,25 @@ losetup -d "$loop_dev"
 ```
 
 ## Build mkfs.f2fs from source code
+To avoid extra dialog from gdb...
+```
+cat <<EOF > ~/.gdbinit
+set debuginfod enabled on
+EOF
+```
+Build
 ```
 sudo apt install git uuid-dev libselinux1-dev libtool dh-autoreconf
 git clone https://git.kernel.org/pub/scm/linux/kernel/git/jaegeuk/f2fs-tools.git && cd "f2fs-tools"
 ./autogen.sh
 ./configure
 make -j$(( $(nproc) + 1))
-libtool --mode=execute gdb -ex=r '/home/a/mycode/f2fs-tools/mkfs/mkfs.f2fs'
+```
+Start
+```
+"$HOME/mycode/f2fs-tools/mkfs/mkfs.f2fs" -V
+```
+Start debug
+```
+libtool --mode=execute gdb -ex=r --args "$HOME/mycode/f2fs-tools/mkfs/mkfs.f2fs" -f -l mylable123 -i -O extra_attr,inode_checksum,sb_checksum,compression -e raw -E bin "$loop_dev"
 ```
